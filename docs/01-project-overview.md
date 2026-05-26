@@ -147,7 +147,7 @@ data/processed/board_detection/
 
 因为它们对 `board_detector` 不是主收益项。
 
-## 7. 明确删除的东西
+## 7. 明确不做的东西
 
 本仓库已经明确不再保留：
 
@@ -156,9 +156,6 @@ data/processed/board_detection/
 - `empty_filter`
 - Python 端 FEN 真源服务定位
 - 评估 pipeline
-- report 导出
-- 对排脚本
-- `inspect_raw_assets.py`
 
 ## 8. 成功标准
 
