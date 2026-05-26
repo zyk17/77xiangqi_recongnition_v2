@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# Local models and generated outputs
+models/**
+!models/.gitkeep
+artifacts/**
+!artifacts/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+!data/eval_cases/.gitkeep
+
+# Local copied raw assets from v1
+data/raw/**
+!data/raw/README.md
+!data/raw/meta/
+!data/raw/meta/.gitkeep
+!data/raw/meta/piece_index_map.example.yaml
+/data/demo/
+/docs/overview.md
+/data/eval_cases/

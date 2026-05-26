@@ -1,0 +1,48 @@
+dataset:
+  train_images: data/processed/board_detection/train/images
+  train_labels: data/processed/board_detection/train/labels
+  val_images: data/processed/board_detection/val/images
+  val_labels: data/processed/board_detection/val/labels
+
+train:
+  image_size: 224
+  map_downsample: 4
+  batch_size: 128
+  epochs: 50
+  lr: 0.001
+  weight_decay: 0.0001
+  map_threshold: 0.35
+  augment:
+    enabled: true
+    brightness: 0.18
+    contrast: 0.18
+    saturation: 0.14
+    hue: 0.03
+    gaussian_blur_enabled: true
+    gaussian_blur_prob: 0.10
+    gaussian_blur_kernel_size: 3
+    gaussian_blur_sigma_min: 0.1
+    gaussian_blur_sigma_max: 0.6
+    noise_enabled: true
+    noise_prob: 0.25
+    noise_std: 3.0
+    jpeg_enabled: true
+    jpeg_prob: 0.16
+    jpeg_quality_min: 68
+    jpeg_quality_max: 92
+
+loss:
+  piece_weight: 1.0
+  cross_weight: 1.0
+  pos_weight: 8.0
+
+checkpoint:
+  out_dir: artifacts/checkpoints/board_detector
+  best_name: best.pt
+
+runtime:
+  seed: 42
+  num_workers: 8
+  device: auto
+  pretrained: false
+  resume_checkpoint:

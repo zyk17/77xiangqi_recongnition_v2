@@ -1,0 +1,47 @@
+labels:
+  path: configs/label_map.json
+
+dataset:
+  train_dir: data/processed/train_cells/train
+  val_dir: data/processed/train_cells/val
+
+train:
+  image_size: 48
+  batch_size: 512
+  epochs: 50
+  lr: 0.001
+  weight_decay: 0.0001
+  augment:
+    enabled: true
+    brightness: 0.18
+    contrast: 0.18
+    saturation: 0.14
+    hue: 0.03
+    gaussian_blur_enabled: true
+    gaussian_blur_prob: 0.12
+    gaussian_blur_kernel_size: 3
+    gaussian_blur_sigma_min: 0.1
+    gaussian_blur_sigma_max: 0.75
+    noise_enabled: true
+    noise_prob: 0.32
+    noise_std: 4.0
+    jpeg_enabled: true
+    jpeg_prob: 0.18
+    jpeg_quality_min: 65
+    jpeg_quality_max: 92
+    random_affine_enabled: true
+    random_affine_prob: 0.28
+    random_affine_translate: 0.04
+    random_affine_scale_min: 0.96
+    random_affine_scale_max: 1.04
+
+checkpoint:
+  out_dir: artifacts/checkpoints/piece_classifier
+  best_name: best.pt
+
+runtime:
+  seed: 42
+  num_workers: 8
+  device: auto
+  pretrained: false
+  resume_checkpoint:

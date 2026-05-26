@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xiangqi-recognize-v2"
+version = "0.1.0"
+description = "Two-model MobileNetV3-Small pipeline for board detection and piece classification"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "Pillow>=10.0",
+  "PyYAML>=6.0",
+  "onnx>=1.16",
+  "onnxscript>=0.7",
+  "onnxruntime>=1.20",
+  "tqdm>=4.66",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+exclude = [
+  ".git",
+  ".idea",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".venv",
+  "__pycache__",
+  "artifacts",
+  "data",
+  "models",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "SIM", "C4", "ARG", "A"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"]

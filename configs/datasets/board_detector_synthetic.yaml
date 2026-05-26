@@ -1,0 +1,169 @@
+paths:
+  boards_root: data/raw/boards
+  pieces_root: data/raw/pieces
+  meta_dir: data/raw/meta
+  output_root: data/processed/board_detection
+
+synthesis:
+  samples_total: 5000
+  train_fraction: 0.9
+  random_seed: 42
+  piece_scale_in_cell: 0.82
+  piece_skin_ids: all_complete
+  train_piece_skin_ids:
+  val_piece_skin_ids:
+    - CNVCS
+    - 八卦棋子
+    - 白底红黑
+    - 财富金
+    - 红黑经典
+    - 精致粉
+    - 木制棋子
+    - 默认棋子
+    - 实木红黑
+    - 上海杯
+    - 雪山冰
+    - 亚克力
+    - 银灰
+    - 央视风棋子
+    - 星巴克
+    - 香槟
+    - 水晶棋子
+    - 人造牛角
+    - 昆山之玉
+    - 刘炳森红黑牛角隶书
+    - 木棋子将军体
+    - 人造牛角楷书
+    - 长白山
+    - 魏碑体象棋套装
+    - 围棋风
+    - 银灰超激体
+    - 云心鹤眼
+    - 原木棋子
+    - 尼龙隶书
+    - 棋天大圣棋子1
+    - 象牙白
+    - 象牙单人
+  fen_variants:
+    - "9/9/9/9/9/9/9/9/9/9"
+    - "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR"
+
+layout:
+  mode: random_mixed
+  random_mixed_fixed_prob: 0.18
+
+synthetic_augmentation:
+  enabled: true
+  brightness: 0.09
+  contrast: 0.09
+  saturation: 0.09
+  hue: 0.03
+  gaussian_blur_enabled: true
+  gaussian_blur_prob: 0.18
+  gaussian_blur_kernel_size: 3
+  gaussian_blur_sigma_min: 0.1
+  gaussian_blur_sigma_max: 0.42
+  noise_enabled: true
+  noise_prob: 0.28
+  noise_std: 4.0
+  jpeg_enabled: true
+  jpeg_prob: 0.18
+  jpeg_quality_min: 65
+  jpeg_quality_max: 92
+  paste_jitter_frac: 0.02
+
+realistic_nuisance:
+  enabled: true
+  stain_prob: 0.085
+  stain_max_per_image: 4
+  stain_radius_px_min: 2
+  stain_radius_px_max: 8
+  stain_alpha_max: 0.26
+  edge_occlusion_prob: 0.065
+  edge_strip_px_min: 2
+  edge_strip_px_max: 10
+  edge_cover_frac_min: 0.16
+  edge_cover_frac_max: 0.36
+
+scene_placement:
+  enabled: true
+  left_margin_frac_min: 0.0
+  left_margin_frac_max: 0.24
+  right_margin_frac_min: 0.0
+  right_margin_frac_max: 0.24
+  top_margin_frac_min: 0.08
+  top_margin_frac_max: 0.68
+  bottom_margin_frac_min: 0.08
+  bottom_margin_frac_max: 0.72
+  wide_screen_prob: 0.58
+  wide_aspect_min: 1.55
+  wide_aspect_max: 2.35
+  narrow_aspect_min: 0.52
+  narrow_aspect_max: 0.82
+  clean_scene_prob: 0.04
+  background_photo_blobs_prob: 0.55
+  background_photo_blobs_min: 2
+  background_photo_blobs_max: 6
+  background_blocks_prob: 0.72
+  background_blocks_min: 3
+  background_blocks_max: 8
+  background_lines_prob: 0.28
+  background_lines_min: 2
+  background_lines_max: 6
+  background_texture_prob: 0.62
+  background_texture_strength: 12.0
+  text_nuisance_prob: 0.32
+  text_count_min: 1
+  text_count_max: 4
+  text_size_min: 12
+  text_size_max: 30
+  text_tokens: ["车", "马", "炮", "士", "象", "新", "游", "戏", "悔", "棋", "沙", "盘", "上", "一", "步", "下", "棋", "盘", "分", "析", "库", "金币", "积分", "设置", "返回"]
+  background_blur_prob: 0.35
+  background_blur_radius_min: 1.2
+  background_blur_radius_max: 5.5
+  background_shade_alpha_min: 10
+  background_shade_alpha_max: 42
+  board_shadow_prob: 0.62
+  top_bar_prob: 0.72
+  top_status_strip_prob: 0.58
+  bottom_panel_prob: 0.78
+  bottom_action_buttons_prob: 0.72
+  bottom_action_buttons_min: 3
+  bottom_action_buttons_max: 6
+  side_panel_prob: 0.78
+  floating_badge_prob: 0.58
+  portrait_prob: 0.62
+  portrait_count_min: 1
+  portrait_count_max: 2
+  icon_cluster_prob: 0.55
+  icon_cluster_count_min: 1
+  icon_cluster_count_max: 3
+  icon_cluster_cols_min: 3
+  icon_cluster_cols_max: 6
+  icon_cluster_rows_min: 2
+  icon_cluster_rows_max: 4
+  semi_transparent_overlay_prob: 0.38
+  overlay_alpha_min: 24
+  overlay_alpha_max: 68
+  board_safe_padding: 4
+  board_occluder_prob: 0.0
+  board_occluder_count_min: 0
+  board_occluder_count_max: 0
+  toolbar_icon_count_min: 6
+  toolbar_icon_count_max: 12
+  secondary_board_prob: 0.0
+  secondary_board_count_min: 1
+  secondary_board_count_max: 1
+  secondary_scale_min: 0.22
+  secondary_scale_max: 0.55
+  secondary_rotation_min: -8.0
+  secondary_rotation_max: 8.0
+  scene_scale_min: 0.82
+  scene_scale_max: 1.28
+
+sampling:
+  pad_fraction: 0.0
+  inset_fraction: [0.0, 0.0, 0.0, 0.0]
+
+output:
+  clear_before_build: true
