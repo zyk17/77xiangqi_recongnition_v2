@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "xiangqi-recognize-v2"
 version = "0.1.0"
-description = "Two-model MobileNetV3-Small pipeline for board detection and piece classification"
+description = "Custom CNN piece classifier and MobileNetV3-Small board detector"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

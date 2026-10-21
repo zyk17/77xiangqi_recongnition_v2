@@ -38,8 +38,7 @@ def main() -> None:
         boards_root=_abs(ROOT, paths.get("boards_root", "data/raw/boards")),
         pieces_root=_abs(ROOT, paths.get("pieces_root", "data/raw/pieces")),
         output_root=_abs(ROOT, paths.get("output_root", "data/processed/train_cells")),
-        meta_dir=_abs(ROOT, paths["meta_dir"]) if paths.get("meta_dir") else None,
-        samples_total=int(synthesis.get("samples_total", 200)),
+        samples_total=(None if synthesis.get("samples_per_skin") is not None else int(synthesis.get("samples_total", 200))),
         train_fraction=float(synthesis.get("train_fraction", 0.9)),
         random_seed=int(synthesis.get("random_seed", 42)),
         fen_variants=list(synthesis.get("fen_variants") or []),
@@ -56,6 +55,8 @@ def main() -> None:
         piece_halo=raw.get("piece_halo"),
         empty_marker_nuisance=raw.get("empty_marker_nuisance"),
         scene_placement=raw.get("scene_placement"),
+        skin_sampling=str(synthesis.get("skin_sampling", "balanced")),
+        samples_per_skin=(int(synthesis["samples_per_skin"]) if synthesis.get("samples_per_skin") is not None else None),
     )
     print(manifest)
 

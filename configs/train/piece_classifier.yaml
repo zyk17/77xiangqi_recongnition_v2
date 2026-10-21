@@ -43,5 +43,4 @@ runtime:
   seed: 42
   num_workers: 8
   device: auto
-  pretrained: false
   resume_checkpoint:

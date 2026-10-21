@@ -13,6 +13,7 @@ from tqdm.auto import tqdm
 
 from .assets import (
     discover_board_images,
+    find_cross_split_piece_asset_overlaps,
     list_complete_piece_skins,
     load_board_grid_roi,
     load_piece_rgba_from_skin,
@@ -93,11 +94,32 @@ def _build_split_skin_sets(
     return train_skins, val_skins
 
 
+def _build_skin_schedule(
+    skins: list[Path],
+    sample_count: int,
+    *,
+    random_seed: int,
+    mode: str,
+) -> list[Path]:
+    if mode == "random":
+        rng = random.Random(random_seed)
+        return [rng.choice(skins) for _ in range(sample_count)]
+    if mode != "balanced":
+        raise ValueError("skin_sampling 应为 'balanced' 或 'random'")
+
+    rng = random.Random(random_seed)
+    schedule: list[Path] = []
+    while len(schedule) < sample_count:
+        cycle = list(skins)
+        rng.shuffle(cycle)
+        schedule.extend(cycle)
+    return schedule[:sample_count]
+
+
 def _render_one_sample(
     *,
     board_path: Path,
     skin_dir: Path,
-    meta_dir: Path | None,
     labels: list[list[str]],
     pad_fraction: float,
     inset_fraction: Sequence[float],
@@ -109,7 +131,7 @@ def _render_one_sample(
     empty_marker_nuisance: Mapping[str, Any] | None,
     scene_placement: Mapping[str, Any] | None,
 ) -> tuple[Image.Image, tuple[int, int, int, int]]:
-    pieces = load_piece_rgba_from_skin(skin_dir, meta_dir=meta_dir)
+    pieces = load_piece_rgba_from_skin(skin_dir)
     board_rgb = Image.open(board_path).convert("RGB")
     grid_roi_xyxy = load_board_grid_roi(board_path)
     image, roi = render_synthetic_board(
@@ -135,8 +157,7 @@ def build_piece_classifier_dataset(
     boards_root: Path,
     pieces_root: Path,
     output_root: Path,
-    meta_dir: Path | None,
-    samples_total: int,
+    samples_total: int | None,
     train_fraction: float,
     random_seed: int,
     fen_variants: list[str],
@@ -153,31 +174,53 @@ def build_piece_classifier_dataset(
     piece_halo: Mapping[str, Any] | None,
     empty_marker_nuisance: Mapping[str, Any] | None,
     scene_placement: Mapping[str, Any] | None,
+    skin_sampling: str = "balanced",
+    samples_per_skin: int | None = None,
 ) -> dict[str, Any]:
     boards = discover_board_images(boards_root)
-    skins = list_complete_piece_skins(pieces_root, meta_dir=meta_dir)
+    skins = list_complete_piece_skins(pieces_root)
     train_skins, val_skins = _build_split_skin_sets(
         skins,
         piece_skin_ids=piece_skin_ids,
         train_piece_skin_ids=train_piece_skin_ids,
         val_piece_skin_ids=val_piece_skin_ids,
     )
+    overlaps = find_cross_split_piece_asset_overlaps(train_skins, val_skins)
+    if overlaps:
+        raise ValueError(f"train/val 棋子原图重复，会造成验证集泄漏: {overlaps}")
     _ensure_piece_imagefolder_layout(output_root, clear_output)
     layout_cfg = merge_layout_cfg(layout)
-    train_count = min(max(int(round(samples_total * train_fraction)), 1), samples_total - 1)
-    split_specs = [("train", train_count, train_skins), ("val", samples_total - train_count, val_skins)]
+    if samples_per_skin is not None:
+        if samples_per_skin < 1:
+            raise ValueError("samples_per_skin 必须至少为 1")
+        split_specs = [
+            ("train", samples_per_skin * len(train_skins), train_skins),
+            ("val", samples_per_skin * len(val_skins), val_skins),
+        ]
+    else:
+        if samples_total is None:
+            raise ValueError("未指定 samples_total 或 samples_per_skin")
+        train_count = min(max(int(round(samples_total * train_fraction)), 1), samples_total - 1)
+        split_specs = [("train", train_count, train_skins), ("val", samples_total - train_count, val_skins)]
     global_index = 0 if clear_output else scan_next_global_image_index(output_root)
-    stats = {"samples": 0, "written_cells": 0}
+    stats: dict[str, Any] = {"samples": 0, "written_cells": 0, "skin_samples": {}}
 
-    for split_name, sample_count, split_skins in split_specs:
+    for split_index, (split_name, sample_count, split_skins) in enumerate(split_specs):
+        skin_schedule = _build_skin_schedule(
+            split_skins,
+            sample_count,
+            random_seed=random_seed + split_index,
+            mode=skin_sampling,
+        )
+        skin_samples = {skin.name: 0 for skin in split_skins}
         split_bar = tqdm(range(sample_count), desc=f"build {split_name} piece_dataset", leave=False, dynamic_ncols=True)
         for sample_offset in split_bar:
             rng = random.Random(random_seed + global_index * 1009 + sample_offset)
             labels = sample_board_labels(rng, fen_variants, layout_cfg)
+            skin_dir = skin_schedule[sample_offset]
             image, roi_xyxy = _render_one_sample(
                 board_path=rng.choice(boards),
-                skin_dir=rng.choice(split_skins),
-                meta_dir=meta_dir,
+                skin_dir=skin_dir,
                 labels=labels,
                 pad_fraction=pad_fraction,
                 inset_fraction=inset_fraction,
@@ -202,8 +245,10 @@ def build_piece_classifier_dataset(
                 crop.save(output_root / split_name / label / f"{global_index:08d}_{row:02d}_{col:02d}.png")
                 stats["written_cells"] += 1
             stats["samples"] += 1
+            skin_samples[skin_dir.name] += 1
             global_index += 1
             split_bar.set_postfix(samples=stats["samples"])
+        stats["skin_samples"][split_name] = skin_samples
 
     manifest = {
         "task": "piece_classifier_dataset",
@@ -220,7 +265,6 @@ def build_board_detector_dataset(
     boards_root: Path,
     pieces_root: Path,
     output_root: Path,
-    meta_dir: Path | None,
     samples_total: int,
     train_fraction: float,
     random_seed: int,
@@ -238,13 +282,16 @@ def build_board_detector_dataset(
     scene_placement: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
     boards = discover_board_images(boards_root)
-    skins = list_complete_piece_skins(pieces_root, meta_dir=meta_dir)
+    skins = list_complete_piece_skins(pieces_root)
     train_skins, val_skins = _build_split_skin_sets(
         skins,
         piece_skin_ids=piece_skin_ids,
         train_piece_skin_ids=train_piece_skin_ids,
         val_piece_skin_ids=val_piece_skin_ids,
     )
+    overlaps = find_cross_split_piece_asset_overlaps(train_skins, val_skins)
+    if overlaps:
+        raise ValueError(f"train/val 棋子原图重复，会造成验证集泄漏: {overlaps}")
     _ensure_board_dataset_layout(output_root, clear_output)
     layout_cfg = merge_layout_cfg(layout)
     train_count = min(max(int(round(samples_total * train_fraction)), 1), samples_total - 1)
@@ -260,7 +307,6 @@ def build_board_detector_dataset(
             image, roi_xyxy = _render_one_sample(
                 board_path=rng.choice(boards),
                 skin_dir=rng.choice(split_skins),
-                meta_dir=meta_dir,
                 labels=labels,
                 pad_fraction=pad_fraction,
                 inset_fraction=inset_fraction,

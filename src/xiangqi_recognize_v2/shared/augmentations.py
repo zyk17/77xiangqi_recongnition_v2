@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import numpy as np
+import torch
 from PIL import Image
 from torchvision import transforms
 
@@ -71,6 +72,14 @@ class OptionalImageAugment:
         return out
 
 
+class ToNhwcUint8:
+    """棋子分类输入：HWC uint8。/255 和 NCHW 由模型完成。"""
+
+    def __call__(self, image: Image.Image) -> torch.Tensor:
+        array = np.asarray(image, dtype=np.uint8)
+        return torch.tensor(array, dtype=torch.uint8)
+
+
 def build_image_only_train_transform(
     image_size: int,
     augment: Mapping[str, Any] | None = None,
@@ -111,11 +120,19 @@ def build_piece_classifier_train_transform(
     ops.extend(
         [
             OptionalImageAugment(cfg),
-            transforms.ToTensor(),
-            IMAGENET_NORMALIZE,
+            ToNhwcUint8(),
         ]
     )
     return transforms.Compose(ops)
+
+
+def build_piece_classifier_eval_transform(image_size: int) -> transforms.Compose:
+    return transforms.Compose(
+        [
+            transforms.Resize((image_size, image_size)),
+            ToNhwcUint8(),
+        ]
+    )
 
 
 def build_eval_transform(image_size: int) -> transforms.Compose:

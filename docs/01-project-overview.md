@@ -9,8 +9,8 @@
    - 输入截图
    - 输出棋盘 `bbox`
 2. `piece_classifier`
-   - `MobileNetV3-Small`
-   - 输入 90 个格子 patch
+   - 4 层卷积 + 最大池化 + 全局平均池化 + 线性层
+   - 输入 `uint8 NHWC` 的 48×48 格子
    - 输出 15 类标签，包含 `empty`
 
 ## 2. Python 的职责
@@ -66,6 +66,7 @@ Rust 继续负责识别后半段和产品主链：
 
 - 固定 `val_piece_skin_ids`
   - 某些皮肤必须稳定放在验证集，不能交给随机切分
+  - 构建前校验 train/val 间不存在完全相同的棋子源 PNG，发现重复会拒绝生成数据集
 - 随机布局
 - 棋子光圈增强
   - 默认用于 `piece_classifier`

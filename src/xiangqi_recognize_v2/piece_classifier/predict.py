@@ -17,13 +17,9 @@ class OnnxPieceClassifier:
         self.image_size = image_size
 
     def _preprocess(self, image: Image.Image) -> np.ndarray:
-        resized = image.convert("RGB").resize((self.image_size, self.image_size))
-        arr = np.asarray(resized, dtype=np.float32) / 255.0
-        arr = arr.transpose(2, 0, 1)
-        mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)[:, None, None]
-        std = np.array([0.229, 0.224, 0.225], dtype=np.float32)[:, None, None]
-        arr = (arr - mean) / std
-        return arr[None, ...]
+        resized = image.convert("RGB").resize((self.image_size, self.image_size), Image.Resampling.BILINEAR)
+        arr = np.asarray(resized, dtype=np.uint8)
+        return np.ascontiguousarray(arr)[None, ...]
 
     def predict(self, image: Image.Image) -> tuple[str, float]:
         logits = self.session.run(None, {self.input_name: self._preprocess(image)})[0][0]

@@ -49,10 +49,10 @@ ruff check .
 
 ## 5. 数据与产物
 
-- `data/raw/` 为本地原始素材层，不纳入 Git。
+- `data/raw/` 为原始棋盘和棋子素材，纳入 Git，便于同步。
 - `data/processed/` 为中间数据层，不纳入 Git。
 - `models/`、`artifacts/` 为本地产物层，不纳入 Git。
-- 需要纳入版本控制的，优先放配置、脚本、说明和小型示例。
+- 需要纳入版本控制的，还有配置、脚本和说明。
 
 ## 6. 代码规范
 
@@ -83,4 +83,4 @@ python .\scripts\train_piece_classifier.py
 - `python -m pytest -q` 通过。
 - `ruff check .` 通过。
 - 文档与配置同步。
-- 不提交 `.venv`、原始数据、模型大文件、评估产物。
+- 不提交 `.venv`、`data/processed/`、模型大文件、评估产物。

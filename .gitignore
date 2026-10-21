@@ -36,12 +36,6 @@ data/processed/**
 !data/processed/.gitkeep
 !data/eval_cases/.gitkeep
 
-# Local copied raw assets from v1
-data/raw/**
-!data/raw/README.md
-!data/raw/meta/
-!data/raw/meta/.gitkeep
-!data/raw/meta/piece_index_map.example.yaml
 /data/demo/
 /docs/overview.md
 /data/eval_cases/

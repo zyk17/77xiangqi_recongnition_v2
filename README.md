@@ -107,7 +107,8 @@ tests/
 - `dataset.py`
   - 15 类 ImageFolder 数据读取
 - `model.py`
-  - `MobileNetV3-Small` 分类头
+  - 4 层 `3×3` 卷积，每层 BatchNorm、ReLU、`2×2` 最大池化，再全局平均池化接 15 类线性层
+  - 输入 `uint8 NHWC`。`/255` 和转 `NCHW` 在模型内完成
 - `train.py`
   - 训练入口
 - `export.py`
@@ -212,6 +213,7 @@ data/processed/train_cells/
 
 - 固定 `val_piece_skin_ids`
   - 某些棋子皮肤强制只进验证集，不走随机切分
+  - 构建前会校验每一类棋子的源 PNG 在 train/val 间没有完全相同的文件；发现重复即拒绝生成，避免验证集泄漏
 - 随机布局
   - 不再只依赖空盘和标准开局
 - 棋子光圈增强
@@ -269,35 +271,6 @@ python .\scripts\build_piece_classifier_dataset.py
 ```powershell
 python .\scripts\build_board_detector_dataset.py
 ```
-
-手动标注真实棋盘框：
-
-```powershell
-python .\scripts\annotate_board_bbox.py .\some_raw_image.jpg --output .\some_raw_image.json
-```
-
-批量顺序标注一个目录：
-
-```powershell
-python .\scripts\annotate_board_bbox.py .\data\raw\board_capture --output-dir .\data\raw\board_capture_labels
-```
-
-交互方式：
-
-- 鼠标左键拖出棋盘框
-- `Enter`
-  - 保存当前标注并跳到下一张
-- `S`
-  - 保存当前标注
-- `A` / `Left`
-  - 上一张
-- `D` / `Right` / `Space`
-  - 下一张
-- `R`
-  - 重置当前框
-- `Q` / `Esc`
-  - 退出
-
 训练棋盘定位：
 
 ```powershell
@@ -326,12 +299,6 @@ python .\scripts\export_board_detector_onnx.py --checkpoint .\artifacts\checkpoi
 
 ```powershell
 python .\scripts\train_piece_classifier.py
-```
-
-开启 ImageNet 预训练：
-
-```powershell
-python .\scripts\train_piece_classifier.py --pretrained
 ```
 
 从当前最佳权重续训：

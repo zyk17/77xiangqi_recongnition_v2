@@ -12,7 +12,7 @@ import yaml
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from ..shared.augmentations import build_eval_transform, build_piece_classifier_train_transform
+from ..shared.augmentations import build_piece_classifier_eval_transform, build_piece_classifier_train_transform
 from .dataset import OrderedPieceImageFolder
 from .labels import load_label_names
 from .model import build_piece_classifier
@@ -78,7 +78,6 @@ def run_piece_classifier_training(
     weight_decay = float(train_cfg.get("weight_decay", 1e-4))
     seed = int(runtime_cfg.get("seed", 42))
     num_workers = int(runtime_cfg.get("num_workers", 0))
-    pretrained = bool(runtime_cfg.get("pretrained", False))
     device = _resolve_device(str(runtime_cfg.get("device", "auto")))
 
     random.seed(seed)
@@ -92,7 +91,7 @@ def run_piece_classifier_training(
     val_set = OrderedPieceImageFolder(
         _ensure_path(repo_root, str(dataset_cfg["val_dir"])),
         labels,
-        transform=build_eval_transform(image_size),
+        transform=build_piece_classifier_eval_transform(image_size),
     )
 
     pin_memory = device.type == "cuda"
@@ -111,7 +110,7 @@ def run_piece_classifier_training(
         pin_memory=pin_memory,
     )
 
-    model = build_piece_classifier(len(labels), pretrained=pretrained).to(device)
+    model = build_piece_classifier(len(labels)).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 

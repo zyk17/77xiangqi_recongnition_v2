@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import random
+import shutil
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image, ImageDraw
 
 from xiangqi_recognize_v2.data_prep import (
@@ -25,10 +27,11 @@ def _write_board(board_dir: Path) -> None:
 def _write_skin(skin_dir: Path) -> None:
     skin_dir.mkdir(parents=True)
     labels = ["rk", "ra", "rb", "rn", "rr", "rc", "rp", "bk", "ba", "bb", "bn", "br", "bc", "bp"]
+    skin_offset = sum(skin_dir.name.encode("utf-8")) % 100
     for index, label in enumerate(labels):
         image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
         draw = ImageDraw.Draw(image)
-        draw.ellipse((4, 4, 28, 28), fill=(80 + index * 5, 30, 30, 255))
+        draw.ellipse((4, 4, 28, 28), fill=(80 + index * 5, 30 + skin_offset, 30, 255))
         image.save(skin_dir / f"{label}.png")
 
 
@@ -43,7 +46,6 @@ def test_build_piece_classifier_dataset(tmp_path: Path) -> None:
         boards_root=boards_root,
         pieces_root=pieces_root,
         output_root=tmp_path / "piece_out",
-        meta_dir=None,
         samples_total=2,
         train_fraction=0.5,
         random_seed=42,
@@ -72,6 +74,75 @@ def test_build_piece_classifier_dataset(tmp_path: Path) -> None:
     assert any((tmp_path / "piece_out" / "train" / "empty").iterdir())
 
 
+def test_piece_dataset_balanced_skin_sampling_covers_each_split_skin(tmp_path: Path) -> None:
+    boards_root = tmp_path / "boards"
+    _write_board(boards_root / "theme_a")
+    pieces_root = tmp_path / "pieces"
+    for skin_name in ("train_a", "train_b", "train_c", "val_a", "val_b"):
+        _write_skin(pieces_root / skin_name)
+
+    manifest = build_piece_classifier_dataset(
+        boards_root=boards_root,
+        pieces_root=pieces_root,
+        output_root=tmp_path / "piece_out",
+        samples_total=None,
+        train_fraction=0.75,
+        random_seed=42,
+        fen_variants=["9/9/9/9/9/9/9/9/9/9"],
+        piece_skin_ids="all_complete",
+        train_piece_skin_ids=["train_a", "train_b", "train_c"],
+        val_piece_skin_ids=["val_a", "val_b"],
+        pad_fraction=0.0,
+        inset_fraction=(0.0, 0.0, 0.0, 0.0),
+        piece_scale_in_cell=0.82,
+        clear_output=True,
+        layout={"mode": "variants_only"},
+        synthetic_augmentation={"enabled": False, "paste_jitter_frac": 0.0},
+        realistic_nuisance={"enabled": False},
+        piece_halo={"enabled": True, "prob": 0.0},
+        empty_marker_nuisance={"enabled": True, "prob_empty_cell": 0.0},
+        scene_placement={"enabled": False},
+        samples_per_skin=2,
+    )
+
+    assert set(manifest["stats"]["skin_samples"]["train"].values()) == {2}
+    assert set(manifest["stats"]["skin_samples"]["val"].values()) == {2}
+
+
+def test_piece_dataset_rejects_cross_split_source_asset_overlap(tmp_path: Path) -> None:
+    boards_root = tmp_path / "boards"
+    _write_board(boards_root / "theme_a")
+    pieces_root = tmp_path / "pieces"
+    _write_skin(pieces_root / "train_skin")
+    shutil.copytree(pieces_root / "train_skin", pieces_root / "val_skin")
+
+    with pytest.raises(ValueError, match="验证集泄漏"):
+        build_piece_classifier_dataset(
+            boards_root=boards_root,
+            pieces_root=pieces_root,
+            output_root=tmp_path / "piece_out",
+            samples_total=2,
+            train_fraction=0.5,
+            random_seed=42,
+            fen_variants=["9/9/9/9/9/9/9/9/9/9"],
+            piece_skin_ids="all_complete",
+            train_piece_skin_ids=["train_skin"],
+            val_piece_skin_ids=["val_skin"],
+            pad_fraction=0.0,
+            inset_fraction=(0.0, 0.0, 0.0, 0.0),
+            piece_scale_in_cell=0.82,
+            clear_output=True,
+            layout={"mode": "variants_only"},
+            synthetic_augmentation={"enabled": False, "paste_jitter_frac": 0.0},
+            realistic_nuisance={"enabled": False},
+            piece_halo={"enabled": True, "prob": 0.0},
+            empty_marker_nuisance={"enabled": True, "prob_empty_cell": 0.0},
+            scene_placement={"enabled": False},
+        )
+
+    assert not (tmp_path / "piece_out").exists()
+
+
 def test_build_board_detector_dataset(tmp_path: Path) -> None:
     boards_root = tmp_path / "boards"
     _write_board(boards_root / "theme_a")
@@ -83,7 +154,6 @@ def test_build_board_detector_dataset(tmp_path: Path) -> None:
         boards_root=boards_root,
         pieces_root=pieces_root,
         output_root=tmp_path / "board_out",
-        meta_dir=None,
         samples_total=2,
         train_fraction=0.5,
         random_seed=42,
@@ -144,7 +214,6 @@ def test_build_board_detector_dataset_rich_scene(tmp_path: Path) -> None:
         boards_root=boards_root,
         pieces_root=pieces_root,
         output_root=tmp_path / "board_out",
-        meta_dir=None,
         samples_total=4,
         train_fraction=0.75,
         random_seed=7,

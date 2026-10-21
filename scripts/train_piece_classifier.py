@@ -13,7 +13,7 @@ from xiangqi_recognize_v2.piece_classifier.train import run_piece_classifier_tra
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="训练 15 类棋子分类模型（MobileNetV3-Small）")
+    parser = argparse.ArgumentParser(description="训练 15 类棋子分类模型。")
     parser.add_argument(
         "--config",
         type=Path,
@@ -23,10 +23,6 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--lr", type=float, default=None)
     parser.add_argument("--device", type=str, default=None)
-    pretrained_group = parser.add_mutually_exclusive_group()
-    pretrained_group.add_argument("--pretrained", action="store_true", dest="pretrained")
-    pretrained_group.add_argument("--no-pretrained", action="store_false", dest="pretrained")
-    parser.set_defaults(pretrained=None)
     parser.add_argument("--train-dir", type=Path, default=None)
     parser.add_argument("--val-dir", type=Path, default=None)
     parser.add_argument("--checkpoint-dir", type=Path, default=None)
@@ -42,8 +38,6 @@ def main() -> None:
         overrides.setdefault("train", {})["lr"] = args.lr
     if args.device is not None:
         overrides.setdefault("runtime", {})["device"] = args.device
-    if args.pretrained is not None:
-        overrides.setdefault("runtime", {})["pretrained"] = args.pretrained
     if args.train_dir is not None:
         overrides.setdefault("dataset", {})["train_dir"] = str(args.train_dir)
     if args.val_dir is not None:

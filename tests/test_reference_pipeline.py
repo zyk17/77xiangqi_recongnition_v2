@@ -28,7 +28,7 @@ def test_reference_pipeline_runs(tmp_path: Path) -> None:
     board_onnx = tmp_path / "board.onnx"
     export_board_detector_onnx(checkpoint_path=board_checkpoint, output_path=board_onnx)
 
-    piece_model = build_piece_classifier(15, pretrained=False)
+    piece_model = build_piece_classifier(15)
     piece_checkpoint = tmp_path / "piece.pt"
     labels = [
         "empty",

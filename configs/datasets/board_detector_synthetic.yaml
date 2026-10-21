@@ -1,7 +1,6 @@
 paths:
   boards_root: data/raw/boards
   pieces_root: data/raw/pieces
-  meta_dir: data/raw/meta
   output_root: data/processed/board_detection
 
 synthesis:
@@ -10,40 +9,41 @@ synthesis:
   random_seed: 42
   piece_scale_in_cell: 0.82
   piece_skin_ids: all_complete
+  # 与 piece_classifier 同一套验证集皮肤，其余完整皮肤进训练。
   train_piece_skin_ids:
   val_piece_skin_ids:
-    - CNVCS
-    - 八卦棋子
-    - 白底红黑
-    - 财富金
-    - 红黑经典
-    - 精致粉
-    - 木制棋子
-    - 默认棋子
-    - 实木红黑
-    - 上海杯
-    - 雪山冰
-    - 亚克力
-    - 银灰
-    - 央视风棋子
-    - 星巴克
-    - 香槟
-    - 水晶棋子
-    - 人造牛角
-    - 昆山之玉
-    - 刘炳森红黑牛角隶书
-    - 木棋子将军体
-    - 人造牛角楷书
-    - 长白山
-    - 魏碑体象棋套装
-    - 围棋风
-    - 银灰超激体
-    - 云心鹤眼
-    - 原木棋子
-    - 尼龙隶书
-    - 棋天大圣棋子1
-    - 象牙白
-    - 象牙单人
+    - normal_002
+    - normal_013
+    - normal_061
+    - normal_096
+    - normal_080
+    - normal_067
+    - normal_037
+    - normal_001
+    - normal_025
+    - normal_003
+    - normal_110
+    - normal_005
+    - normal_100
+    - normal_023
+    - normal_035
+    - normal_113
+    - normal_047
+    - normal_008
+    - normal_032
+    - normal_016
+    - normal_039
+    - normal_009
+    - normal_105
+    - normal_115
+    - renpang_013
+    - normal_103
+    - normal_004
+    - normal_020
+    - normal_026
+    - normal_042
+    - normal_094
+    - renpang_014
   fen_variants:
     - "9/9/9/9/9/9/9/9/9/9"
     - "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR"

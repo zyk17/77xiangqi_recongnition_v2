@@ -8,6 +8,8 @@ from pathlib import Path
 import yaml
 from PIL import Image, ImageDraw
 
+from xiangqi_recognize_v2.data_prep.assets import find_cross_split_piece_asset_overlaps, list_complete_piece_skins
+
 
 def _write_board(board_dir: Path) -> None:
     board_dir.mkdir(parents=True)
@@ -20,10 +22,11 @@ def _write_board(board_dir: Path) -> None:
 def _write_skin(skin_dir: Path) -> None:
     skin_dir.mkdir(parents=True)
     labels = ["rk", "ra", "rb", "rn", "rr", "rc", "rp", "bk", "ba", "bb", "bn", "br", "bc", "bp"]
+    skin_offset = sum(skin_dir.name.encode("utf-8")) % 100
     for index, label in enumerate(labels):
         image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
         draw = ImageDraw.Draw(image)
-        draw.ellipse((4, 4, 28, 28), fill=(80 + index * 5, 30, 30, 255))
+        draw.ellipse((4, 4, 28, 28), fill=(80 + index * 5, 30 + skin_offset, 30, 255))
         image.save(skin_dir / f"{label}.png")
 
 
@@ -139,3 +142,22 @@ def test_build_board_detector_dataset_script(tmp_path: Path) -> None:
     assert len(payload["grid_points"]) == 10
     assert all(len(row) == 9 for row in payload["grid_points"])
     assert result.stdout.strip()
+
+
+def test_board_and_piece_configs_share_val_skin_split() -> None:
+    repo = Path(__file__).resolve().parents[1]
+    piece_cfg = yaml.safe_load((repo / "configs" / "datasets" / "piece_classifier_synthetic.yaml").read_text(encoding="utf-8"))
+    board_cfg = yaml.safe_load((repo / "configs" / "datasets" / "board_detector_synthetic.yaml").read_text(encoding="utf-8"))
+    piece_val = piece_cfg["synthesis"]["val_piece_skin_ids"]
+    board_val = board_cfg["synthesis"]["val_piece_skin_ids"]
+    assert board_val == piece_val
+    assert piece_cfg["synthesis"]["train_piece_skin_ids"] is None
+    assert board_cfg["synthesis"]["train_piece_skin_ids"] is None
+    pieces_root = repo / "data" / "raw" / "pieces"
+    missing = [skin_id for skin_id in piece_val if not (pieces_root / skin_id).is_dir()]
+    assert missing == []
+    val_names = set(piece_val)
+    skins = list_complete_piece_skins(pieces_root)
+    train_skins = [path for path in skins if path.name not in val_names]
+    val_skins = [path for path in skins if path.name in val_names]
+    assert find_cross_split_piece_asset_overlaps(train_skins, val_skins) == {}

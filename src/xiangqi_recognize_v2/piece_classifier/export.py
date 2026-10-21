@@ -19,14 +19,14 @@ def export_piece_classifier_onnx(
     dynamic_batch: bool = True,
 ) -> Path:
     payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-    model = build_piece_classifier(len(payload["label_names"]), pretrained=False)
+    model = build_piece_classifier(len(payload["label_names"]))
     model.load_state_dict(payload["model_state_dict"])
     model.eval()
 
     image_size = int(payload["image_size"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
     external_data_path = output_path.with_name(f"{output_path.name}.data")
-    dummy = torch.randn(1, 3, image_size, image_size)
+    dummy = torch.zeros(1, image_size, image_size, 3, dtype=torch.uint8)
     dynamic_shapes = None
     if dynamic_batch:
         # torch.export-based ONNX export expects forward arg names here, not ONNX tensor names.

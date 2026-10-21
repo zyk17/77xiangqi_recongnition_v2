@@ -62,31 +62,6 @@ python -m pytest -q .\tests\test_build_dataset_scripts.py
 ```
 
 ## 3. 数据生成
-
-### 3.0 手动标注真实棋盘框
-
-对单张 `raw` 图手动拖框，保存 `bbox`：
-
-```powershell
-python .\scripts\annotate_board_bbox.py .\some_raw_image.jpg --output .\some_raw_image.json
-```
-
-对一个目录连续标注，JSON 统一输出到单独目录：
-
-```powershell
-python .\scripts\annotate_board_bbox.py .\data\raw\board_capture --output-dir .\data\raw\board_capture_labels
-```
-
-使用方式：
-
-- 鼠标左键拖出棋盘框
-- `Enter` 保存并下一张
-- `S` 保存
-- `A` / `Left` 上一张
-- `D` / `Right` / `Space` 下一张
-- `R` 重置
-- `Q` 或 `Esc` 退出
-
 ### 3.1 合成棋子分类数据
 
 使用默认配置生成：
@@ -163,13 +138,6 @@ python .\scripts\train_piece_classifier.py --epochs 20 --batch-size 256 --lr 0.0
 
 ```powershell
 python .\scripts\train_piece_classifier.py --device cuda
-```
-
-显式开启或关闭 ImageNet 预训练：
-
-```powershell
-python .\scripts\train_piece_classifier.py --pretrained
-python .\scripts\train_piece_classifier.py --no-pretrained
 ```
 
 改训练/验证目录：
